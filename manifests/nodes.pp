@@ -22,11 +22,12 @@ node 'wikitest1.hsd1.pa.comcast.net' {
 }
 node 'ip-172-31-51-138.ec2.internal' {
 
+  class {'linux':}
 
-  file { '/info.txt':
-    ensure  => 'present',
-    content => inline_template("Created by Puppet at <%= Time.now %>\n"),
-  }
+#  file { '/info.txt':
+#    ensure  => 'present',
+#    content => inline_template("Created by Puppet at <%= Time.now %>\n"),
+#  }
 
 }
 
