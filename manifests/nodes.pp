@@ -1,3 +1,4 @@
+
 node 'wiki.hsd1.pa.comcast.net'  {
 
 #  file { '/info.txt':
@@ -6,23 +7,52 @@ node 'wiki.hsd1.pa.comcast.net'  {
 #  }
 
   class {'linux':}
+  class {'mediawiki':}
 
 }
 
 node 'wikitest.hsd1.pa.comcast.net' {
 
+$wikitestsitename = 'wikitest'
+  $wikitestmetanamespace = 'Wikitest'
+  $wikitestserver = "http://172.31.0.203"
+  $wikitestdbserver = 'localhost'
+  $wikitestdbname ='wikitest'
+  $wikitestdbuser ='root'
+  $wikitestdbpassword = 'training'
+  $wikitestupgradekey = 'puppet'
+
+
+
   class {'linux':}
+  class {'mediawiki':}
 
 
 }
 node 'wikitest1.hsd1.pa.comcast.net' {
+ 
+  $wikitestsitename = 'wikitest'
+  $wikitestmetanamespace = 'Wikitest'
+  $wikitestserver = "http://172.31.0.203"
+  $wikitestdbserver = 'localhost'
+  $wikitestdbname ='wikitest'
+  $wikitestdbuser ='root'
+  $wikitestdbpassword = 'training'
+  $wikitestupgradekey = 'puppet'
 
   class {'linux':}
+  class {'mediawiki':}
+}
+node 'nagendra.hsd1.pa.comcast.net' {
+
+  class {'linux':}
+  class {'mediawiki':}
 
 }
 node 'ip-172-31-51-138.ec2.internal' {
 
   class {'linux':}
+  class {'mediawiki':}
 
 #  file { '/info.txt':
 #    ensure  => 'present',
