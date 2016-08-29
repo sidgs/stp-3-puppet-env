@@ -1,21 +1,35 @@
 
 node 'wiki.hsd1.pa.comcast.net'  {
 
-#  file { '/info.txt':
-#    ensure => 'present',
-#    content => inline_template("Created by puppet at <%= Time.now %>\n"),
-#  }
+  file { '/info.txt':
+    ensure => 'present',
+    content => inline_template("Created by puppet at <%= Time.now %>\n"),
+  }
 
   class {'linux':}
   class {'mediawiki':}
 
 }
+node 'srikanth.hsd1.pa.comcast.net' {
+  $wikitestsitename = 'wikitest'
+  $wikitestmetanamespace = 'Wikitest'
+  $wikitestserver = "http://172.31.0.210"
+  $wikitestdbserver = 'localhost'
+  $wikitestdbname ='wikitest'
+  $wikitestdbuser ='root'
+  $wikitestdbpassword = 'training'
+  $wikitestupgradekey = 'puppet'
 
-node 'wikitest.hsd1.pa.comcast.net' {
+  
+  class {'linux':}
+  class {'mediawiki':}
+}
+
+node 'afrozubuntu.hsd1.pa.comcast.net' {
 
 $wikitestsitename = 'wikitest'
   $wikitestmetanamespace = 'Wikitest'
-  $wikitestserver = "http://172.31.0.203"
+  $wikitestserver = "http://172.31.0.210"
   $wikitestdbserver = 'localhost'
   $wikitestdbname ='wikitest'
   $wikitestdbuser ='root'
@@ -26,10 +40,8 @@ $wikitestsitename = 'wikitest'
 
   class {'linux':}
   class {'mediawiki':}
-
-
 }
-node 'wikitest1.hsd1.pa.comcast.net' {
+node 'shruthi.hsd1.pa.comcast.net' {
  
   $wikitestsitename = 'wikitest'
   $wikitestmetanamespace = 'Wikitest'
@@ -54,10 +66,10 @@ node 'ip-172-31-51-138.ec2.internal' {
   class {'linux':}
   class {'mediawiki':}
 
-#  file { '/info.txt':
-#    ensure  => 'present',
-#    content => inline_template("Created by Puppet at <%= Time.now %>\n"),
-#  }
+  file { '/info.txt':
+    ensure  => 'present',
+    content => inline_template("Created by Puppet at <%= Time.now %>\n"),
+  }
 
 }
 
@@ -90,3 +102,4 @@ class linux {
   }
 
 }
+
