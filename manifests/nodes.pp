@@ -1,5 +1,5 @@
 
-node 'tomcat-server-1', 'puppetmaster'  {
+node 'tomcat-server-1', 'puppetmaster.lan'  {
   class {'linux':}
   # install package
   # CATALINA_HOME
