@@ -40,6 +40,11 @@ node 'database' {
   class {'linux':}
 }
 
+node 'puppetmaster' {
+
+  class {'linux':}
+}
+
 node 'sonarqube' {
 
   class {'linux':}
