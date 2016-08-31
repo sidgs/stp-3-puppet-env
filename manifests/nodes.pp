@@ -24,7 +24,7 @@ node 'tomcat-server-1', 'puppetagent-2'  {
     }
   }
   # setup service , ensure that it is running
-  tomcat::service { 
+  tomcat::service { 'default' :
       service_enable => true,
       service_ensure => 'running',
   }
