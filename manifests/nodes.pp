@@ -24,10 +24,10 @@ node 'tomcat-server-1', 'puppetagent-2'  {
     }
   }
   # setup service , ensure that it is running
-  # tomcat::service { 
-  #    service_enable => true,
-  #    service_ensure => 'running',
-  # }
+  tomcat::service { 
+      service_enable => true,
+      service_ensure => 'running',
+  }
   # deploy the project 'petclinic'
 }
 
