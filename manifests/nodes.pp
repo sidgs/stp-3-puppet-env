@@ -57,7 +57,7 @@ node 'webserver' {
 }
 
 # these are the set of foundational services
-class linux_all {
+class linux {
   $admintools = ['git','nano','screen']
   package { $admintools:
     ensure => 'installed',
