@@ -24,10 +24,10 @@ node 'tomcat-server-1', 'puppetagent-2'  {
     }
   }
   # setup service , ensure that it is running
-  tomcat::service {
-    service_enable => true,
-    service_ensure => 'running',
-  }
+  # tomcat::service { 
+  #    service_enable => true,
+  #    service_ensure => 'running',
+  # }
   # deploy the project 'petclinic'
 }
 
@@ -59,8 +59,8 @@ node 'webserver' {
 # these are the set of foundational services
 class linux_all {
   $admintools = ['git','nano','screen']
-  package { $admintools
-    ensure => 'installed'
+  package { $admintools:
+    ensure => 'installed',
   }
 
   $ntpservice = $osfamily ? {
@@ -69,10 +69,10 @@ class linux_all {
      default => 'ntp',
   }
 
-  package { $ntpservice
+  package { $ntpservice:
     ensure => 'installed',
   }
-  service { $ntpservice
+  service { $ntpservice:
     ensure =>  'running',
     enable => true,
   }
