@@ -1,5 +1,5 @@
 
-node 'tomcat-server-1', 'puppetagent-2'  {
+node 'tomcat-server-1', 'puppetagent*'  {
   class {'linux':}
   # install package
   # CATALINA_HOME
