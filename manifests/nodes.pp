@@ -1,6 +1,11 @@
 node 'tomcat-server-1', 'puppetagent-2'  {
   class {'linux':}
-  class { 'java': }
+ # class { 'java': }
+  java::oracle { 'jdk8' :
+  ensure  => 'present',
+  version => '8',
+  java_se => 'jdk',
+}
 
   # install package
   # CATALINA_HOME
