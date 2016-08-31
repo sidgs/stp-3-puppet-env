@@ -1,6 +1,7 @@
-
 node 'tomcat-server-1', 'puppetagent-2'  {
   class {'linux':}
+  class { 'java': }
+
   # install package
   # CATALINA_HOME
   tomcat::install {'/opt/tomcat8' :
