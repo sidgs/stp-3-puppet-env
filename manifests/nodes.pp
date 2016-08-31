@@ -1,11 +1,18 @@
 node 'tomcat-server-1', 'puppetagent-2'  {
   class {'linux':}
- # class { 'java': }
-  java::oracle { 'jdk8' :
-  ensure  => 'present',
-  version => '8',
-  java_se => 'jdk',
+
+ # if OS Fanily is redhat do this
+ class { 'java' :
+  package => 'java-1.8.0-openjdk-devel',
 }
+
+# if OS Family is ubuntu 
+# include java 
+#   java::oracle { 'jdk8' :
+#   ensure  => 'present',
+#   version => '8',
+#   java_se => 'jdk',
+# }
 
   # install package
   # CATALINA_HOME
