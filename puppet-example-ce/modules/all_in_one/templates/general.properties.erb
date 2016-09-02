@@ -1,0 +1,50 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+api.endpoint=<%= scope.lookupvar('all_in_one::install::host_protocol') %>://<%= scope.lookupvar('all_in_one::install::host_url') %>/api
+
+che.user.workspaces.storage=/home/codenvy/codenvy-data/fs
+vfs.local.fs_index_root_dir=${java.io.tmpdir}/fs-index
+vfs.local.tmp_workspace_fs_root_dir=${java.io.tmpdir}/fs-data
+
+mailsender.application.server.url=http://localhost:8080/mail/
+mail.configuration.path=/home/codenvy/codenvy-data/conf/email-connection.properties
+
+# status page config
+maintenance.statuspage.id=<% if has_variable?('all_in_one::install::maintenance_statuspage_id') %><%= scope.lookupvar('all_in_one::install::maintenance_statuspage_id') %><% else %>NULL<% end %>
+maintenance.statuspage.apikey=<% if has_variable?('all_in_one::install::maintenance_statuspage_apikey') %><%= scope.lookupvar('all_in_one::install::maintenance_statuspage_apikey') %><% else %>NULL<% end %>
+
+# zendesk config
+zendesk.shared.key=<% if has_variable?('all_in_one::install::zendesk_shared_key') %><%= scope.lookupvar('all_in_one::install::zendesk_shared_key') %><% else %>NULL<% end %>
+zendesk.subdomain=<% if has_variable?('all_in_one::install::zendesk_subdomain') %><%= scope.lookupvar('all_in_one::install::zendesk_subdomain') %><% else %>NULL<% end %>
+
+#Should we cleanup database on sturtup. Used only for dev
+#It have to be false on production.
+dbcodenvy.clean_on_startup=<% if has_variable?('all_in_one::install::dbcodenvy_clean_on_startup') %><%= scope.lookupvar('all_in_one::install::dbcodenvy_clean_on_startup') %><% else %>false<% end %>
+
+#Initial size of scheduler pool.
+schedule.core_pool_size=10
+
+# GIT
+git.server.uri.prefix=git
+
+user.self.creation.allowed=<%= scope.lookupvar('all_in_one::install::user_self_creation_allowed') %>
+
+# Limits
+limits.user.workspaces.count=<%= scope.lookupvar('all_in_one::install::limits_user_workspaces_count') %>
+limits.user.workspaces.ram=<%= scope.lookupvar('all_in_one::install::limits_user_workspaces_ram') %>
+limits.workspace.env.ram=<%= scope.lookupvar('all_in_one::install::limits_workspace_env_ram') %>
+
+# workspace proxy configuration
+http.proxy=<%= scope.lookupvar('all_in_one::install::http_proxy_for_codenvy_workspaces') %>
+https.proxy=<%= scope.lookupvar('all_in_one::install::https_proxy_for_codenvy_workspaces') %>
+no_proxy=<%= scope.lookupvar('all_in_one::install::no_proxy_for_codenvy_workspaces') %>
+
+# During the stop of the workspace automatically creates a snapshot if the value is {true},
+# otherwise just stops the workspace.
+workspace.runtime.auto_snapshot=false
+# During the start of the workspace automatically restored it from a snapshot if the value is {true},
+# otherwise just creates the new workspace.
+workspace.runtime.auto_restore=false

@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+APP_DIR="/usr/local/swarm"
+PID_FILE="/var/run/swarm.pid"
+
+set -e
+
+start () {
+    echo "Swarm starting ..."
+    if [ ! -f $PID_FILE ]; then
+        nohup $APP_DIR/bin/swarm manage -H 0.0.0.0:23750 file:///usr/local/swarm/node_list 2>> /var/log/swarm.log & echo $! > $PID_FILE
+        echo "Swarm started."
+    else
+        echo "Swarm is already running."
+    fi
+}
+
+stop () {
+    if [ -f $PID_FILE ]; then
+        PID=`cat $PID_FILE`
+        echo "Swarm stopping ..."
+        kill $PID
+        echo "Swarm stopped."
+        rm $PID_FILE
+    else
+        echo "Swarm is not running."
+    fi
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop}"
+    exit 2
+esac
+
+exit $?

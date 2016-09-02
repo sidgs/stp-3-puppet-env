@@ -1,0 +1,6 @@
+# factory mongo config
+factory.storage.db.url=localhost:27017
+factory.storage.db.name=factory
+factory.storage.db.collection=factory
+factory.storage.db.username=FactoryUser
+factory.storage.db.password=<%= scope.lookupvar('all_in_one::install::mongo_user_pass') %>

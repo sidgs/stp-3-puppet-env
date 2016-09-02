@@ -1,0 +1,146 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+#---------------------------------------------------------------------
+# Example configuration for a possible web application.  See the
+# full configuration options online.
+#
+#   http://haproxy.1wt.eu/download/1.4/doc/configuration.txt
+#
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+    # to have these messages end up in /var/log/haproxy.log you will
+    # need to:
+    #
+    # 1) configure syslog to accept network log events.  This is done
+    #    by adding the '-r' option to the SYSLOGD_OPTIONS in
+    #    /etc/sysconfig/syslog
+    #
+    # 2) configure local2 events to go to the /var/log/haproxy.log
+    #   file. A line like the following can be added to
+    #   /etc/sysconfig/syslog
+    #
+    #    local2.*                       /var/log/haproxy.log
+    #
+    log         127.0.0.1 local2
+
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    option                  http-server-close
+    option forwardfor       except 127.0.0.0/8
+    option                  redispatch
+    retries                 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         1m
+    timeout client          1h # workaround for websocket connection without ping frames
+    timeout server          1h # workaround for websocket connection without ping frames
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn                 6000
+    errorfile 408 /dev/null
+
+          # --------------------------------------------------------------
+          #     Statistics
+          # --------------------------------------------------------------
+          #  stats parameters
+          stats enable
+          stats uri /infopage?1
+          stats auth CodenvyAdmin:<%= scope.lookupvar('third_party::haproxy::config::haproxy_statistic_pass') %>
+          stats hide-version
+          stats realm Cloud-IDE\ HTTP\ Router
+          stats refresh 60s
+          stats show-legends
+
+backend tomcat_bk
+    mode http
+    server tomcat_bk localhost:8080 check
+
+<% if scope.lookupvar('third_party::haproxy::config::install_monitoring_tools') == "true" -%>
+backend zabbix_bk
+    mode http
+    server zabbix_bk localhost:7777 check
+<% end -%>
+
+backend router_bk
+    mode http
+    server router_bk localhost:8081 check
+
+<% if has_variable?('third_party::haproxy::config::on_prem') -%>
+backend im_bk
+    mode http
+    server im_bk localhost:8082
+<% end -%>
+
+frontend http-in
+    bind *:80
+    capture request header Host len 45
+    capture request header User-agent len 15
+    capture cookie logged_in len 20
+    reqidel ^X-Forwarded-Proto:.*
+    reqadd X-Forwarded-Proto:\ http
+<% if scope.lookupvar('third_party::haproxy::config::host_protocol') == "https" -%>
+    redirect scheme https
+
+frontend https-in
+    bind *:443 ssl crt <% if has_variable?('third_party::haproxy::config::path_to_haproxy_ssl_certificate') %><%= scope.lookupvar('third_party::haproxy::config::path_to_haproxy_ssl_certificate') %><% else %>/etc/haproxy/codenvy.pem<% end %> <% if has_variable?('third_party::haproxy::config::haproxy_https_config') %><%= scope.lookupvar('third_party::haproxy::config::haproxy_https_config') %><% else %>no-sslv3 no-tls-tickets ciphers ALL:-ADH:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP:!RC4:!AECDH<% end %>
+    capture request header Host len 45
+    capture request header User-agent len 15
+    capture cookie logged_in len 20
+    reqidel ^X-Forwarded-Proto:.*
+    reqadd X-Forwarded-Proto:\ https
+<% end -%>
+
+    acl is_www hdr_beg(host) -i www.
+<% if scope.lookupvar('third_party::haproxy::config::install_monitoring_tools') == "true" -%>
+    acl acl_zabbix path_beg -i /monit
+<% end -%>
+    acl is_logged_in hdr_sub(cookie) logged_in
+    acl url_login path_beg -i /site/login
+    acl url_factory url_sub -i factory
+<% if has_variable?('third_party::haproxy::config::on_prem') -%>
+    acl acl_im path_beg -i /im
+<% end -%>
+	acl acl_router hdr_end(host) -i .machines.<%= scope.lookupvar('third_party::haproxy::config::host_url') %>
+
+    # forward requests from /f to /factory
+    reqrep ^([^\ :]*)\ /f(?!actory)(.*)     \1\ /factory\2 if { path /f /f/ }
+
+    # redirect /site/login to /site/create_account if no cookie logged_in
+    reqrep ^([^\ :]*)\ /site/login(.*)     \1\ /site/create-account\2 if url_login !is_logged_in url_factory
+    redirect prefix / code 302 if url_login !is_logged_in url_factory
+
+    # WWW redirection
+    redirect prefix <%= scope.lookupvar('third_party::haproxy::config::host_protocol') %>://<%= scope.lookupvar('third_party::haproxy::config::host_url') %> code 301 if is_www !acl_router
+
+<% if scope.lookupvar('third_party::haproxy::config::install_monitoring_tools') == "true" -%>
+    use_backend zabbix_bk if acl_zabbix
+<% end -%>
+<% if has_variable?('third_party::haproxy::config::on_prem') -%>
+    use_backend im_bk if acl_im
+<% end -%>
+    use_backend router_bk if acl_router
+    default_backend tomcat_bk

@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+APP_DIR="/home/codenvy-im"
+<% if scope.lookupvar('codenvy_im::configs::env') != "prod" %>JPDA="jpda"<% else %>JPDA=""<% end %>
+
+start () {
+# Starting tomcat
+ echo "Starting tomcat..."
+ su - codenvy-im -c "export JPDA_ADDRESS=8101; $APP_DIR/codenvy-im-tomcat/bin/catalina.sh ${JPDA} start"
+ }
+
+ stop () {
+ # Stoping tomcat
+ if [ -f $APP_DIR/codenvy-im.pid ]
+      then
+          pid=`cat $APP_DIR/codenvy-im.pid`
+ fi
+
+ su - codenvy-im -c "$APP_DIR/codenvy-im-tomcat/bin/catalina.sh stop"
+
+ if [ -n "$pid" ]
+    then
+        COUNTER=0
+        STATUS="1"
+        while [ $STATUS == "1" ]; do
+        ps -fp $pid
+        RETVAL=$?
+        if [[ $RETVAL -eq 0 ]];
+            then
+                sleep 5
+                let COUNTER=COUNTER+1
+                if [[ $COUNTER -eq 10 ]]
+                    then
+                        kill -9 $pid
+                fi
+            else
+                STATUS="0"
+            fi
+        done
+ fi
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop}"
+    exit 2
+esac
+
+exit $?

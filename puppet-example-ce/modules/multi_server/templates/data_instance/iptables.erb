@@ -1,0 +1,38 @@
+*filter
+:FORWARD DROP
+:INPUT DROP
+:OUTPUT ACCEPT
+:I-ICMP -
+<% if has_variable?('multi_server::data_instance::install::snmp_ip') %>:I-SNMP -<% end %>
+
+-A INPUT                -m state --state ESTABLISHED,RELATED                            -j ACCEPT
+-A INPUT        -i lo   -m state --state NEW                                            -j ACCEPT
+
+-A INPUT         -m state --state NEW -p tcp --dport 22                          -j ACCEPT
+-A INPUT         -m state --state NEW -p tcp --dport 389                         -j ACCEPT
+-A INPUT         -m state --state NEW -p tcp --dport 5000                        -j ACCEPT
+-A INPUT         -m state --state NEW -p tcp --dport 5432                         -j ACCEPT
+-A INPUT         -m state --state NEW -p tcp --dport 10050                        -j ACCEPT
+-A INPUT         -m state --state NEW -p tcp --dport 27017                       -j ACCEPT
+-A INPUT         -m state --state NEW -p tcp --dport 28017                       -j ACCEPT
+<% if has_variable?('multi_server::data_instance::install::snmp_ip') %>
+-A INPUT         -m state --state NEW -p udp --dport 161                         -j I-SNMP
+-A INPUT         -m state --state NEW -p tcp --dport 2812                        -j I-SNMP
+<% end %>
+-A INPUT         -m state --state NEW -p icmp                                    -j I-ICMP
+
+-A INPUT         -p tcp -m multiport --dports 135,136,137,138,139,445,1433       -j DROP
+-A INPUT         -p udp -m multiport --dports 135,136,137,138,139,445,1433       -j DROP
+#-A INPUT                                                                         -j LOG
+# ------------------------------------------
+-A I-ICMP       -m length --length 550:65535                                            -j REJECT --reject-with icmp-admin-prohibited
+-A I-ICMP -m hashlimit --hashlimit-name ICMP --hashlimit-mode srcip --hashlimit 10/s --hashlimit-burst 32 --hashlimit-htable-expire 120000 --hashlimit-htable-max 512 -j ACCEPT
+-A I-ICMP                                                                               -j LOG --log-prefix "-DDoS ICMP-"
+-A I-ICMP                                                                               -j DROP
+<% if has_variable?('multi_server::data_instance::install::snmp_ip') %>
+# --------------------- SNMP access
+-A I-SNMP       -s <%= scope.lookupvar('multi_server::data_instance::install::snmp_ip') %>                                                   -j ACCEPT
+-A I-SNMP                                                                               -j LOG --log-prefix " BAD-In-SNMP "
+-A I-SNMP                                                                               -j DROP
+<% end %>
+COMMIT

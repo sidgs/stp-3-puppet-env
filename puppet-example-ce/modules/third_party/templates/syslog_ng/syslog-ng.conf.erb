@@ -1,0 +1,50 @@
+@version:3.2
+
+# syslog-ng configuration file.
+#
+# This should behave pretty much like the original syslog on RedHat. But
+# it could be configured a lot smarter.
+#
+# See syslog-ng(8) and syslog-ng.conf(5) for more information.
+#
+
+options {
+    flush_lines(100);
+    log_fifo_size(100);
+    keep_hostname(no);
+    use_dns(no);
+    use_fqdn(no);
+    owner("<%= scope.lookupvar('third_party::syslog_ng::config::owner') %>");
+    group("<%= scope.lookupvar('third_party::syslog_ng::config::group') %>"); 
+    perm(0640); 
+    create_dirs(yes);
+    dir_owner("<%= scope.lookupvar('third_party::syslog_ng::config::owner') %>");
+    dir_group("<%= scope.lookupvar('third_party::syslog_ng::config::group') %>");
+    dir_perm(0770);
+    stats_freq(0);
+    bad_hostname("^gconfd$");
+};
+
+source s_net_p { udp(ip(0.0.0.0) port(<%= scope.lookupvar('third_party::syslog_ng::config::port') %>) so_rcvbuf(67108864) log_iw_size(100) log_fetch_limit(100)); };
+
+destination d_from_net_messages_p { file("<%= scope.lookupvar('third_party::syslog_ng::config::log_path') %>/$YEAR/$MONTH/$DAY/messages" template("$HOST $YEAR-$MONTH-$DAY $MSG\n") template_escape(no)); };
+
+filter f_kernel     { facility(kern); };
+filter f_default    { level(info..emerg) and
+                        not (facility(mail)
+                        or facility(authpriv) 
+                        or facility(cron)); };
+filter f_auth       { facility(authpriv); };
+filter f_mail       { facility(mail); };
+filter f_emergency  { level(emerg); };
+filter f_news       { facility(uucp) or
+                        (facility(news) 
+                        and level(crit..emerg)); };
+filter f_boot   { facility(local7); };
+filter f_cron   { facility(cron); };
+
+filter f_messages { level(info,notice,warn,error,alert,emerg,panic) and not facility(auth,authpriv,cron,daemon,mail,news); };
+
+log { source(s_net_p); filter(f_messages); destination(d_from_net_messages_p); };
+
+# vim:ft=syslog-ng:ai:si:ts=4:sw=4:et:

@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+APP_DIR="/usr/local/docker-distribution"
+PID_FILE="/var/run/docker-distribution.pid"
+
+set -e
+
+start () {
+    echo "docker-distribution starting ..."
+
+    if [ ! -f $PID_FILE ]; then
+        nohup $APP_DIR/bin/registry $APP_DIR/config.yml >> /var/log/docker-distribution.log 2>&1 & echo $! > $PID_FILE
+        echo "docker-distribution started."
+    else
+        echo "docker-distribution is already running."
+    fi
+}
+
+stop () {
+    if [ -f $PID_FILE ]; then
+        PID=`cat $PID_FILE`
+        echo "docker-distribution stopping ..."
+        kill $PID
+        echo "docker-distribution stopped."
+        rm $PID_FILE
+    else
+        echo "docker-distribution is not running."
+    fi
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop}"
+    exit 2
+esac
+
+exit $?

@@ -1,0 +1,22 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+<% if scope.lookupvar('multi_server::api_instance::install::use_local_mail_host') == "true" -%>
+mail.host=localhost
+mail.port=25
+mail.transport.protocol=smtp
+mail.smtp.auth=false
+<% else -%>
+mail.host=<%= scope.lookupvar('multi_server::api_instance::install::mail_host') %>
+mail.port=<%= scope.lookupvar('multi_server::api_instance::install::mail_host_port') %>
+mail.ssl=<%= scope.lookupvar('multi_server::api_instance::install::mail_use_ssl') %>
+mail.transport.protocol=<%= scope.lookupvar('multi_server::api_instance::install::mail_transport_protocol') %>
+mail.smtp.auth=<%= scope.lookupvar('multi_server::api_instance::install::mail_smtp_auth') %>
+mail.smtp.socketFactory.class=<%= scope.lookupvar('multi_server::api_instance::install::mail_smtp_socketFactory_class') %>
+mail.smtp.socketFactory.fallback=<%= scope.lookupvar('multi_server::api_instance::install::mail_smtp_socketFactory_fallback') %>
+mail.smtp.socketFactory.port=<%= scope.lookupvar('multi_server::api_instance::install::mail_smtp_socketFactory_port') %>
+mail.smtp.auth.username=<%= scope.lookupvar('multi_server::api_instance::install::mail_smtp_auth_username') %>
+mail.smtp.auth.password=<%= scope.lookupvar('multi_server::api_instance::install::mail_smtp_auth_password') %>
+<% end -%>

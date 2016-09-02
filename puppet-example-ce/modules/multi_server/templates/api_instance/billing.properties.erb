@@ -1,0 +1,9 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+# marketo configuration
+marketo.host.url=<% if has_variable?('multi_server::api_instance::install::marketo_host_url') %><%= scope.lookupvar('multi_server::api_instance::install::marketo_host_url') %><% else %><% end %>
+marketo.clientid=<% if has_variable?('multi_server::api_instance::install::marketo_clientid') %><%= scope.lookupvar('multi_server::api_instance::install::marketo_clientid') %><% else %><% end %>
+marketo.client_secret=<% if has_variable?('multi_server::api_instance::install::marketo_client_secret') %><%= scope.lookupvar('multi_server::api_instance::install::marketo_client_secret') %><% else %><% end %>

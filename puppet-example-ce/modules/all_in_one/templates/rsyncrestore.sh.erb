@@ -1,0 +1,26 @@
+#!/bin/sh
+
+SSH_KEY=~/.ssh/key.pem
+SSH_USER=codenvy
+
+SRC_FOLDER=${1}
+DST_FOLDER=${2}
+DST_HOST=${3}
+DST_USR_ID=${4}
+DST_GRP_ID=${5}
+
+# ensure existing trailing slash to overrite permissions of destination folder too
+if [[ ${SRC_FOLDER} != */ ]]; then
+   SRC_FOLDER=${SRC_FOLDER}"/"
+fi
+if [[ ${DST_FOLDER} != */ ]]; then
+   DST_FOLDER=${DST_FOLDER}"/"
+fi
+
+rsync --quiet --delete --partial --links --safe-links --owner --group --recursive --times --human-readable --bwlimit=7000 --executability \
+      --include='.codenvy/' \
+      --filter=':- .gitignore' \
+      --rsh="ssh -i ${SSH_KEY} -l ${SSH_USER} -o StrictHostKeyChecking=no" \
+      --rsync-path="sudo rsync" \
+      --chown ${DST_USR_ID}:${DST_GRP_ID} \
+      ${SRC_FOLDER} ${DST_HOST}:${DST_FOLDER}

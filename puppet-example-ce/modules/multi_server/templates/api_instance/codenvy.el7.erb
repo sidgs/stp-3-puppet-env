@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+APP_DIR="/home/codenvy"
+<% if scope.lookupvar('multi_server::api_instance::install::env') != "prod" %>JPDA="jpda"<% else %>JPDA=""<% end %>
+mongo_host=<%= scope.lookupvar('multi_server::api_instance::install::mongo_url') %>
+mongo_port=<%= scope.lookupvar('multi_server::api_instance::install::mongo_port') %>
+
+check_data_instance() {
+ pingMongo=`mongo --quiet --host $mongo_host:$mongo_port --eval "printjson(db.runCommand({ping:1}))"`
+ ldap_port=`nmap $mongo_host -Pn -p 389`
+ if [[ $pingMongo == *"\"ok\" : 1"* ]] && [[ $ldap_port == *"389/tcp open"* ]]
+     then
+         echo "data instance is available"
+     else
+         echo "data instance is unavailable"
+         exit 3
+ fi
+}
+
+start () {
+ #check that data instance is available
+ check_data_instance
+ # Starting tomcat
+ echo "Starting tomcat..."
+ su - codenvy -c "$APP_DIR/codenvy-tomcat/bin/catalina.sh ${JPDA} start"
+ }
+ 
+ stop () {
+ # Stoping tomcat
+ if [ -f $APP_DIR/codenvy.pid ]
+      then
+          pid=`cat $APP_DIR/codenvy.pid`
+ fi
+
+ su - codenvy -c "$APP_DIR/codenvy-tomcat/bin/catalina.sh stop"
+
+ if [ -n "$pid" ]
+    then
+        COUNTER=0
+        STATUS="1"
+        while [ $STATUS == "1" ]; do
+        ps -fp $pid
+        RETVAL=$?
+        if [[ $RETVAL -eq 0 ]];
+            then
+                sleep 15
+                let COUNTER=COUNTER+1
+                if [[ $COUNTER -eq 10 ]]
+                    then
+                        kill -9 $pid
+                fi
+            else
+                STATUS="0"
+            fi
+        done
+ fi
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop}"
+    exit 2
+esac
+
+exit $?

@@ -1,0 +1,9 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+api.endpoint=<%= scope.lookupvar('codenvy_im::host_protocol') %>://<%= scope.lookupvar('codenvy_im::host_url') %>/api
+saas.api.endpoint=<%= scope.lookupvar('codenvy_im::saas_api_endpoint') %>
+installation-manager.update_server_endpoint=<%= scope.lookupvar('codenvy_im::installation_manager_update_server_endpoint') %>
+codenvy.install_type=<%= scope.lookupvar('codenvy_im::codenvy_install_type') %>

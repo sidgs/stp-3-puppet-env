@@ -1,0 +1,37 @@
+# Firewall configuration written by system-config-firewall
+# Manual customization of this file is not recommended.
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 53 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 53 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 81 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 444 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 389 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 5000 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8000 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 9000 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 10050 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 10051 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 27017 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 32001 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 32101 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 161 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 32768:65535 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8101 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8140 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 32102 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 32202 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 5432 -j ACCEPT
+
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -d 172.17.0.0/16 -j ACCEPT
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT

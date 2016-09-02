@@ -1,0 +1,33 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+    . /etc/bashrc
+fi
+
+unset CATALINA_PID JAVA_HOME JAVA_OPTS CODENVY_DATA_DIR CHE_LOCAL_CONF_DIR CATALINA_OPTS
+
+JMX0="-Dcom.sun.management.jmxremote=true"
+JMX1="-Djava.rmi.server.hostname=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_host_name') %>"
+JMX2="-Dcom.sun.management.jmxremote.authenticate=true"
+JMX3="-Dcom.sun.management.jmxremote.password.file=${HOME}/jmxremote.password"
+JMX4="-Dcom.sun.management.jmxremote.access.file=${HOME}/jmxremote.access"
+JMX5="-Dcom.sun.management.jmxremote.ssl=false"
+
+CODENVY_DATA_DIR="/home/codenvy/codenvy-data"
+CHE_LOGS_DIR="$CODENVY_DATA_DIR/logs"
+CHE_LOCAL_CONF_DIR="/home/codenvy/analytics_conf/"
+
+JAVA_HOME="/usr/local/jdk"
+
+PATH=${JAVA_HOME}/bin:${JAVA_HOME}/jre/bin:$PATH:$HOME/bin:$HOME/.local/bin
+
+CATALINA_PID="${HOME}/${USER}.pid"
+CATALINA_OPTS="$JMX0 $JMX1 $JMX2 $JMX3 $JMX4 $JMX5"
+JAVA_OPTS="-Xms512m -Xmx<%= scope.lookupvar('multi_server::analytics_instance::configs::xmx') %>m -server -XX:+HeapDumpOnOutOfMemoryError -Dche.logs.dir=$CHE_LOGS_DIR -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseCMSInitiatingOccupancyOnly -XX:+ScavengeBeforeFullGC -XX:+CMSScavengeBeforeRemark"
+
+export PATH JAVA_HOME JAVA_OPTS CATALINA_PID PATH CATALINA_OPTS 
+export CHE_LOCAL_CONF_DIR CHE_LOGS_DIR

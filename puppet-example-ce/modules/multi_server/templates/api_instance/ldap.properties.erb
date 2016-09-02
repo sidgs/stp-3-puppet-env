@@ -1,0 +1,32 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+com.sun.jndi.ldap.connect.pool=<%= scope.lookupvar('multi_server::api_instance::install::ldap_connect_pool') %>
+com.sun.jndi.ldap.connect.pool.initsize=<%= scope.lookupvar('multi_server::api_instance::install::ldap_connect_pool_initsize') %>
+com.sun.jndi.ldap.connect.pool.maxsize=<%= scope.lookupvar('multi_server::api_instance::install::ldap_connect_pool_maxsize') %>
+com.sun.jndi.ldap.connect.pool.prefsize=<%= scope.lookupvar('multi_server::api_instance::install::ldap_connect_pool_prefsize') %>
+com.sun.jndi.ldap.connect.pool.timeout=<%= scope.lookupvar('multi_server::api_instance::install::ldap_connect_pool_timeout') %>
+
+java.naming.provider.url=<%= scope.lookupvar('multi_server::api_instance::install::ldap_protocol') %>://<%= scope.lookupvar('multi_server::api_instance::install::ldap_host') %>:<%= scope.lookupvar('multi_server::api_instance::install::ldap_port') %>
+java.naming.security.authentication=<%= scope.lookupvar('multi_server::api_instance::install::java_naming_security_authentication') %>
+java.naming.security.credentials=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_password') %>
+java.naming.security.principal=<%= scope.lookupvar('multi_server::api_instance::install::java_naming_security_principal') %>
+
+user.ldap.user_container_dn=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_user_container_dn') %>
+user.ldap.user_dn=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_user_dn') %>
+user.ldap.old_user_dn=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_old_user_dn') %>
+user.ldap.object_classes=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_object_classes') %>
+user.ldap.attr.id=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_attr_id') %>
+user.ldap.attr.name=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_attr_name') %>
+user.ldap.attr.password=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_attr_password') %>
+user.ldap.attr.email=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_attr_email') %>
+user.ldap.attr.aliases=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_attr_aliases') %>
+user.ldap.attr.role_name=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_attr_role_name') %>
+user.ldap.allowed_role=<%= scope.lookupvar('multi_server::api_instance::install::user_ldap_allowed_role') %>
+
+profile.ldap.profile_container_dn=<%= scope.lookupvar('multi_server::api_instance::install::profile_ldap_profile_container_dn') %>
+profile.ldap.profile_dn=<%= scope.lookupvar('multi_server::api_instance::install::profile_ldap_profile_dn') %>
+profile.ldap.attr.id=<%= scope.lookupvar('multi_server::api_instance::install::profile_ldap_attr_id') %>
+profile.ldap.allowed_attributes=<%= scope.lookupvar('multi_server::api_instance::install::profile_ldap_allowed_attributes') %>

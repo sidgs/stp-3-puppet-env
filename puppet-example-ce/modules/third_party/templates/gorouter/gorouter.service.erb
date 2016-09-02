@@ -1,0 +1,12 @@
+[Unit]
+Description=gorouter
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/lib/systemd/gorouter start
+ExecStop=/usr/lib/systemd/gorouter stop
+PIDFile=/var/run/gorouter.pid
+
+[Install]
+WantedBy=multi-user.target

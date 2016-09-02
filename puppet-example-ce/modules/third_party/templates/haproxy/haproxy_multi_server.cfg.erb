@@ -1,0 +1,227 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+global
+          #  to have these messages end up in /var/log/haproxy.log you will
+          #  need to:
+          #
+          #  1) configure syslog to accept network log events.  This is done
+          #     by adding the '-r' option to the SYSLOGD_OPTIONS in
+          #     /etc/sysconfig/syslog
+          #
+          #  2) configure local2 events to go to the /var/log/haproxy.log
+          #    file. A line like the following can be added to
+          #    /etc/sysconfig/syslog
+          #
+          #     local2.*                       /var/log/haproxy.log
+          #
+          log 127.0.0.1 local2
+          chroot /var/lib/haproxy
+          pidfile /var/run/haproxy.pid
+          maxconn 8000
+          user haproxy
+          group haproxy
+          daemon
+          #  turn on stats unix socket
+          stats socket /var/lib/haproxy/stats
+          # ---------------------------------------------------------------------
+          #  common defaults that all the 'listen' and 'backend' sections will
+          #  use if not designated in their block
+          # ---------------------------------------------------------------------
+
+defaults
+          mode                    http
+          log                     global
+          option                  httplog
+          option                  dontlognull
+          option                  http-server-close
+          option forwardfor       except 127.0.0.0/8
+          option                  redispatch
+          retries                 3
+          timeout http-request    10s
+          timeout queue           1m
+          timeout connect         1m
+          timeout client          1h # workaround for websocket connection without ping frames
+          timeout server          1h # workaround for websocket connection without ping frames
+          timeout http-keep-alive 10s
+          timeout check           10s
+          maxconn                 6000
+          errorfile 408 /dev/null
+
+
+          # --------------------------------------------------------------
+          #     Statistics
+          # --------------------------------------------------------------
+          #  stats parameters
+          stats enable
+          stats uri /infopage?1
+          stats auth CodenvyAdmin:<%= scope.lookupvar('third_party::haproxy::config::haproxy_statistic_pass') %>
+          stats hide-version
+          stats realm Cloud-IDE\ HTTP\ Router
+          stats refresh 60s
+          stats show-legends
+
+
+          # ---------------------------------------------------------------------
+          #     Backends
+          # ---------------------------------------------------------------------
+<% if @custom_site_url == "default" or @custom_site_url.empty? %>
+<% else %>
+backend bk_custom_site
+          mode http
+          reqirep ^Host: Host:\ <%= scope.lookupvar('third_party::haproxy::config::custom_site_url') %>
+          server bk_custom_site <%= scope.lookupvar('third_party::haproxy::config::custom_site_url') %>:80 check
+          server bk_site localhost:8080 backup check
+<% end -%>
+
+backend bk_site
+          mode http
+          server bk_site localhost:8080 check
+<% if has_variable?('third_party::haproxy::config::codenvy_prod') -%>
+          errorloc303 503 https://install.codenvycorp.com/maintenance/
+<% end -%>
+backend bk_api
+          mode http
+          server bk_api <%= scope.lookupvar('third_party::haproxy::config::api_host_name') %>:8080 check
+<% if has_variable?('third_party::haproxy::config::codenvy_prod') -%>
+          errorloc303 503 https://install.codenvycorp.com/maintenance/
+<% end -%>
+<% if has_variable?('third_party::haproxy::config::on_prem') -%>
+backend bk_im
+          mode http
+          server bk_im <%= scope.lookupvar('third_party::haproxy::config::puppet_master_host_name') %>:8082
+<% end -%>
+          # --------------------------------------------------------------
+          #     Additional backends (prod, staging)
+          # --------------------------------------------------------------
+
+backend bk_analytics
+          mode http
+          server bk_analytics <%= scope.lookupvar('third_party::haproxy::config::analytics_host_name') %>:9763 check
+
+<% if scope.lookupvar('third_party::haproxy::config::install_monitoring_tools') == "true" -%>
+backend bk_zabbix
+          mode http
+          server bk_zabbix <%= scope.lookupvar('third_party::haproxy::config::zabbix_server') %>:7777 check
+<% end -%>
+
+<% if has_variable?('third_party::haproxy::config::codenvy_prod') -%>
+backend bk_update
+          mode http
+          server bk_update <%= scope.lookupvar('third_party::haproxy::config::updater_host_name') %>:8080 check
+<% end -%>
+
+backend router_bk
+    mode http
+    server router_bk localhost:8081 check
+
+          # --------------------------------------------------------------
+          #     Frontend
+          # --------------------------------------------------------------
+frontend http-in
+          bind *:80
+          capture request header Host len 45
+          capture request header User-agent len 15
+          capture cookie logged_in len 20
+          reqidel ^X-Forwarded-Proto:.*
+          reqadd X-Forwarded-Proto:\ http
+<% if has_variable?('third_party::haproxy::config::codenvy_prod') -%>
+          acl is_cloud_ide hdr(host) -i cloud-ide.com
+          redirect location https://codenvy.com if is_cloud_ide
+          acl is_blog path_beg -i /blog
+          redirect location http://blog.codenvy.com if is_blog
+<% end -%>
+<% if scope.lookupvar('third_party::haproxy::config::host_protocol') == "https" -%>
+          redirect scheme https
+
+frontend https-in
+          bind *:443 ssl crt <% if has_variable?('third_party::haproxy::config::path_to_haproxy_ssl_certificate') %><%= scope.lookupvar('third_party::haproxy::config::path_to_haproxy_ssl_certificate') %><% else %>/etc/haproxy/codenvy.pem<% end %> <% if has_variable?('third_party::haproxy::config::haproxy_https_config') %><%= scope.lookupvar('third_party::haproxy::config::haproxy_https_config') %><% else %>no-sslv3 no-tls-tickets ciphers ALL:-ADH:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP:!RC4:!AECDH<% end %>
+          capture request header Host len 45
+          capture request header User-agent len 15
+          capture cookie logged_in len 20
+          reqidel ^X-Forwarded-Proto:.*
+          reqadd X-Forwarded-Proto:\ https
+<% end -%>
+
+          # host checks
+          acl is_www hdr_beg(host) -i www.
+          acl is_codenvy hdr(host) -i <%= scope.lookupvar('third_party::haproxy::config::host_url') %> www.<%= scope.lookupvar('third_party::haproxy::config::host_url') %> <%= scope.lookupvar('third_party::haproxy::config::host_url') %>:443
+          acl is_logged_in hdr_sub(cookie) logged_in
+          acl url_login path_beg -i /site/login
+          acl url_factory url_sub -i factory
+<% if has_variable?('third_party::haproxy::config::codenvy_prod') -%>
+          acl is_old_ide hdr(host) -i c2.<%= scope.lookupvar('third_party::haproxy::config::host_url') %> www.c2.<%= scope.lookupvar('third_party::haproxy::config::host_url') %> cloud-ide.com www.cloud-ide.com
+<% end -%>
+
+          # path checks
+          acl acl_api path_beg -i /api/ /factory /git/
+          acl acl_analytics path_beg -i /analytics
+<% if scope.lookupvar('third_party::haproxy::config::install_monitoring_tools') == "true" -%>
+          acl acl_zabbix path_beg -i /monit
+<% end -%>
+          acl acl_site  path_beg -i /site/ /dashboard /ws/ /ide-resources/ /swagger /next-dashboard
+<% if has_variable?('third_party::haproxy::config::codenvy_prod') -%>
+          # SAAS paths
+          acl acl_update path_beg -i /update
+          acl acl_installs path_beg -i /install-single
+          acl acl_installm path_beg -i /install-multi
+          acl acl_install path_beg -i /install-codenvy
+          acl acl_installs_host hdr(host) -i <%= scope.lookupvar('third_party::haproxy::config::installs_host_url') %>
+          acl is_blog path_beg -i /blog
+<% end -%>
+<% if has_variable?('third_party::haproxy::config::on_prem') -%>
+          acl acl_im path_beg -i /im
+<% end -%>
+	      acl acl_router hdr_end(host) -i .machines.<%= scope.lookupvar('third_party::haproxy::config::host_url') %>
+
+          # --------------------------------------------------------------
+          #     Forwarding rules
+          # --------------------------------------------------------------
+<% if has_variable?('third_party::haproxy::config::codenvy_prod') -%>
+          #redirect location https://install.codenvycorp.com/maintenance code 307
+          http-request deny if !is_codenvy !acl_installs_host
+          redirect location http://blog.codenvy.com if is_blog
+<% end -%>
+
+          # forward requests from /f to /factory
+          reqrep ^([^\ :]*)\ /f(?!actory)(.*)     \1\ /factory\2 if { path /f /f/ }
+
+          # redirect /site/login to /site/create_account if no cookie logged_in
+          reqrep ^([^\ :]*)\ /site/login(.*)     \1\ /site/create-account\2 if url_login !is_logged_in url_factory
+          redirect prefix / code 302 if url_login !is_logged_in url_factory
+
+          # WWW redirection
+          redirect prefix <%= scope.lookupvar('third_party::haproxy::config::host_protocol') %>://<%= scope.lookupvar('third_party::haproxy::config::host_url') %> code 301 if is_www !acl_router
+
+<% if has_variable?('third_party::haproxy::config::codenvy_prod') -%>
+          # Old domains redirection
+          redirect prefix <%= scope.lookupvar('third_party::haproxy::config::host_protocol') %>://<%= scope.lookupvar('third_party::haproxy::config::host_url') %> code 301 if is_old_ide
+
+          # Forward requests from /install-single
+          redirect location <%= scope.lookupvar('third_party::haproxy::config::host_protocol') %>://<%= scope.lookupvar('third_party::haproxy::config::host_url') %>/update/repository/public/download/install-codenvy code 301 if acl_installs_host acl_installs
+
+          # Forward requests from /install-multi
+          redirect location <%= scope.lookupvar('third_party::haproxy::config::host_protocol') %>://<%= scope.lookupvar('third_party::haproxy::config::host_url') %>/update/repository/public/download/install-codenvy-multi code 301 if acl_installs_host acl_installm
+
+          # Forward requests from /install-codenvy
+          redirect location <%= scope.lookupvar('third_party::haproxy::config::host_protocol') %>://<%= scope.lookupvar('third_party::haproxy::config::host_url') %>/update/repository/public/download/install-codenvy code 301 if acl_installs_host acl_install
+<% end -%>
+		  use_backend router_bk if acl_router
+          use_backend bk_api if acl_api
+          use_backend bk_analytics if acl_analytics
+<% if scope.lookupvar('third_party::haproxy::config::install_monitoring_tools') == "true" -%>
+          use_backend bk_zabbix if acl_zabbix
+<% end -%>
+          use_backend bk_site if acl_site
+<% if has_variable?('third_party::haproxy::config::on_prem') -%>
+          use_backend bk_im if acl_im
+<% end -%>
+<% if has_variable?('third_party::haproxy::config::codenvy_prod') -%>
+          use_backend bk_update if acl_update
+<% end -%>
+<% if @custom_site_url == "default" or @custom_site_url.empty? %>
+          default_backend bk_site
+<% else %>
+          default_backend bk_custom_site
+<% end %>

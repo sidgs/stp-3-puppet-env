@@ -1,0 +1,49 @@
+#!/bin/bash
+# File Name:     check_state.sh
+#
+
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+# Path to the puppet lock file
+FILE=/var/lib/puppet/state/agent_catalog_run.lock
+
+# Number of minutes since last modification that indicate a stale lock file
+STALEMIN=120
+
+# Current UNIX timestamp
+NOW=$(date +%s)
+
+if [ -f ${FILE} ]
+    then
+        # UNIX timestamp of last puppet lock modification
+        MODIFIED=$(stat -c %Y ${FILE})
+        # Check if file is stale or not and restart if it is.
+        if [ $((${NOW}-${MODIFIED})) -gt $((${STALEMIN}*60)) ]
+          then
+              rm -f ${FILE}
+              <% if @operatingsystemrelease =~ /6./ -%>
+              /sbin/service puppet restart
+              <% elsif @operatingsystemrelease =~ /7./ -%>
+              /usr/bin/systemctl stop puppet.service
+              <% end -%>
+        fi
+fi
+
+# Check that puppet agent is running
+<% if @operatingsystemrelease =~ /6./ -%>
+STATE=`/sbin/service puppet status`
+if [[ ! $STATE == *running* ]];
+	then
+		/sbin/service puppet restart
+fi;
+<% elsif @operatingsystemrelease =~ /7./ -%>
+STATE=`/usr/bin/systemctl status puppet.service`
+if [[ ! $STATE == *'Active: active'* ]];
+	then
+		/usr/bin/systemctl restart puppet.service
+fi;
+<% end -%>
+# EOF

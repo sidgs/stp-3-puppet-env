@@ -1,0 +1,12 @@
+[Unit]
+Description=Codenvy API Server
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/lib/systemd/codenvy start
+ExecStop=/usr/lib/systemd/codenvy stop
+PIDFile=/home/codenvy/codenvy.pid
+
+[Install]
+WantedBy=multi-user.target

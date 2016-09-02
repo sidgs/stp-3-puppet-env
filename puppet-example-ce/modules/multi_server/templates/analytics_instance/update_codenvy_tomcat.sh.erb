@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+stopAndWait () {
+	#stop codenvy service
+	<% if @operatingsystemrelease =~ /6./ -%>
+	service codenvy stop
+	<% elsif @operatingsystemrelease =~ /7./ -%>
+	systemctl stop codenvy.service
+	<% end -%>
+
+	#wait codenvy service stop
+    STATUS="1"
+    while [ $STATUS == "1" ]; do
+
+	<% if @operatingsystemrelease =~ /6./ -%>
+    status=`service codenvy status`
+        if [[ $status == *stopped* ]];
+        then
+            STATUS="0"
+        else
+            sleep 5;
+        fi;
+	<% elsif @operatingsystemrelease =~ /7./ -%>
+    status=`systemctl status codenvy.service`
+        if [[ $status != *'Active: active'* ]];
+        then
+            STATUS="0"
+        else
+            sleep 5;
+        fi;
+	<% end -%>
+    done
+}
+
+cleanUp () {
+	# remove old tomcat
+	rm -rf codenvy-tomcat/*
+	sleep 10
+}
+
+extract () {
+	# extract new tomcat
+	su - codenvy -c "unzip archives/analytics-tomcat.zip -d /home/codenvy/codenvy-tomcat"
+}
+
+stopAndWait
+
+cleanUp
+
+extract

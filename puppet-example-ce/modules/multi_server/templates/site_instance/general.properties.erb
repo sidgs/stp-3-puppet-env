@@ -1,0 +1,9 @@
+api.endpoint=<%= scope.lookupvar('multi_server::site_instance::install::host_protocol') %>://<%= scope.lookupvar('multi_server::site_instance::install::host_url') %>/api
+
+# status page config
+maintenance.statuspage.id=<% if has_variable?('multi_server::site_instance::install::maintenance_statuspage_id') %><%= scope.lookupvar('multi_server::site_instance::install::maintenance_statuspage_id') %><% else %>NULL<% end %>
+maintenance.statuspage.apikey=<% if has_variable?('multi_server::site_instance::install::maintenance_statuspage_apikey') %><%= scope.lookupvar('multi_server::site_instance::install::maintenance_statuspage_apikey') %><% else %>NULL<% end %>
+
+# zendesk config
+zendesk.shared.key=<% if has_variable?('multi_server::site_instance::install::zendesk_shared_key') %><%= scope.lookupvar('multi_server::site_instance::install::zendesk_shared_key') %><% else %>NULL<% end %>
+zendesk.subdomain=<% if has_variable?('multi_server::site_instance::install::zendesk_subdomain') %><%= scope.lookupvar('multi_server::site_instance::install::zendesk_subdomain') %><% else %>NULL<% end %>

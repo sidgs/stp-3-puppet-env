@@ -1,0 +1,44 @@
+version: 0.1
+log:
+  level: info
+  fields:
+    service: registry
+    environment: production
+storage:
+    cache:
+        layerinfo: redis
+    filesystem:
+        rootdirectory: <%= scope.lookupvar('third_party::docker_distribution::config::docker_distribution_filesystem_root_dir') %>
+    delete:
+        enabled: true
+    maintenance:
+        uploadpurging:
+            enabled: false
+http:
+    addr: :<%= scope.lookupvar('third_party::docker_distribution::config::docker_distribution_http_port') %>
+    secret: <%= scope.lookupvar('third_party::docker_distribution::config::docker_distribution_http_secret') %>
+redis:
+  addr: localhost:6379
+  pool:
+    maxidle: 16
+    maxactive: 64
+    idletimeout: 300s
+  dialtimeout: 5s
+  readtimeout: 5s
+  writetimeout: 5s
+notifications:
+    endpoints:
+        - name: local-8082
+          url: http://localhost:5003/callback
+          headers:
+             Authorization: [Bearer <an example token>]
+          timeout: 5s
+          threshold: 10
+          backoff: 5s
+          disabled: true
+        - name: local-8083
+          url: http://localhost:8083/callback
+          timeout: 5s
+          threshold: 10
+          backoff: 5s
+          disabled: true

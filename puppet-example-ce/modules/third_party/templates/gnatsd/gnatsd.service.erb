@@ -1,0 +1,12 @@
+[Unit]
+Description=gnatsd
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/lib/systemd/gnatsd start
+ExecStop=/usr/lib/systemd/gnatsd stop
+PIDFile=/var/run/gnatsd.pid
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Docker Distribution
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/lib/systemd/docker-distribution start
+ExecStop=/usr/lib/systemd/docker-distribution stop
+PIDFile=/var/run/docker-distribution.pid
+Restart=on-failure
+LimitNOFILE=10240
+
+[Install]
+WantedBy=multi-user.target

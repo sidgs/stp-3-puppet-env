@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+APP_DIR="/usr/local/gnatsd"
+PID_FILE="/var/run/gnatsd.pid"
+
+set -e
+
+start () {
+    echo "gnatsd starting ..."
+    if [ ! -f $PID_FILE ]; then
+        $APP_DIR/bin/gnatsd -c $APP_DIR/gnatsd.conf &
+        echo "gnatsd started."
+    else
+        echo "gnatsd is already running."
+    fi
+}
+
+stop () {
+    if [ -f $PID_FILE ]; then
+        PID=`cat $PID_FILE`
+        echo "gnatsd stopping ..."
+        kill $PID
+        echo "gnatsd stopped."
+        rm $PID_FILE
+    else
+        echo "gnatsd is not running."
+    fi
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop}"
+    exit 2
+esac
+
+exit $?

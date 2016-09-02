@@ -1,0 +1,6 @@
+# factory mongo config
+factory.storage.db.url=<%= scope.lookupvar('multi_server::api_instance::install::mongo_url') %>:<%= scope.lookupvar('multi_server::api_instance::install::mongo_port') %>
+factory.storage.db.name=<%= scope.lookupvar('multi_server::api_instance::install::mongo_db_name') %>
+factory.storage.db.collection=<%= scope.lookupvar('multi_server::api_instance::install::mongo_db_name') %>
+factory.storage.db.username=<%= scope.lookupvar('multi_server::api_instance::install::mongo_user_name') %>
+factory.storage.db.password=<%= scope.lookupvar('multi_server::api_instance::install::mongo_user_pass') %>

@@ -1,0 +1,32 @@
+dn: <%= scope.lookupvar('third_party::openldap_servers::config::user_ldap_dn') %>
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: codenvy
+description: "Codenvy Inc"
+structuralObjectClass: organization
+
+dn: <%= scope.lookupvar('third_party::openldap_servers::config::user_ldap_user_container_dn') %>
+objectClass: top
+objectClass: organizationalUnit
+ou: users
+structuralObjectClass: organizationalUnit
+
+dn: ou=groups,<%= scope.lookupvar('third_party::openldap_servers::config::user_ldap_dn') %>
+objectClass: top
+objectClass: organizationalUnit
+ou: groups
+description: groups
+structuralObjectClass: organizationalUnit
+
+dn: uid=<%= scope.lookupvar('third_party::openldap_servers::config::admin_ldap_mail') %>,<%= scope.lookupvar('third_party::openldap_servers::config::user_ldap_user_container_dn') %>
+mail: <%= scope.lookupvar('third_party::openldap_servers::config::admin_ldap_mail') %>
+initials: <%= scope.lookupvar('third_party::openldap_servers::config::admin_ldap_mail') %>
+givenName: Admin
+objectClass: inetOrgPerson
+sn: Codenvy
+cn: <%= scope.lookupvar('third_party::openldap_servers::config::admin_ldap_user_name') %>
+userPassword:: <%= Base64.encode64(@admin_ldap_password)-%>
+structuralObjectClass: inetOrgPerson
+employeeType: system/admin
+employeeType: system/manager

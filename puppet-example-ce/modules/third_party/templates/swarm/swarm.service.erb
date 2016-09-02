@@ -1,0 +1,15 @@
+[Unit]
+Description=Swarm
+Wants=docker.service
+After=network.target docker.service
+
+[Service]
+Type=forking
+ExecStart=/usr/lib/systemd/swarm start
+ExecStop=/usr/lib/systemd/swarm stop
+PIDFile=/var/run/swarm.pid
+Restart=on-failure
+LimitNOFILE=10240
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+APP_DIR="/usr/local/gorouter"
+PID_FILE="/var/run/gorouter.pid"
+
+set -e
+
+start () {
+    echo "gorouter starting ..."
+    if [ ! -f $PID_FILE ]; then
+        $APP_DIR/bin/gorouter -c=$APP_DIR/gorouter.conf & echo $! > $PID_FILE
+        echo "gorouter started."
+    else
+        echo "gorouter is already running."
+    fi
+}
+
+stop () {
+    if [ -f $PID_FILE ]; then
+        PID=`cat $PID_FILE`
+        echo "gorouter stopping ..."
+        kill $PID
+        echo "gorouter stopped."
+        rm $PID_FILE
+    else
+        echo "gorouter is not running."
+    fi
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop}"
+    exit 2
+esac
+
+exit $?

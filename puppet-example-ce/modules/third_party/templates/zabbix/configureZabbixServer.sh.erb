@@ -1,0 +1,111 @@
+#!/bin/bash
+
+set -e
+# configs
+ServerUrl="localhost:7777/monit/api_jsonrpc.php"
+username="Admin"
+pass="<%= scope.lookupvar('third_party::zabbix::server_install::zabbix_admin_password') %>"
+AuthToken=""
+JMXPass="<%= scope.lookupvar('third_party::zabbix::server_install::jmx_password') %>"
+AdminEmail="<%= scope.lookupvar('third_party::zabbix::server_install::zabbix_admin_email') %>"
+
+#DNS names
+<% if @aio == "true" -%>
+AIOInstanceDNS="<%= scope.lookupvar('third_party::zabbix::server_install::zabbix_server') %>"
+HostUrl="<%= scope.lookupvar('third_party::zabbix::server_install::host_url') %>"
+<% else %>
+HostUrl="<%= scope.lookupvar('third_party::zabbix::server_install::host_url') %>"
+AnalyticsInstanceDNS="<%= scope.lookupvar('third_party::zabbix::server_install::analytics_host_name') %>"
+APIInstanceDNS="<%= scope.lookupvar('third_party::zabbix::server_install::api_host_name') %>"
+SiteInstanceDNS="<%= scope.lookupvar('third_party::zabbix::server_install::site_host_name') %>"
+MachineInstanceDNS="<%= scope.lookupvar('third_party::zabbix::server_install::machine_host_name') %>"
+DataInstanceDNS="<%= scope.lookupvar('third_party::zabbix::server_install::data_host_name') %>"
+<% end -%>
+
+changeDefaultCredentials() {
+if [ $pass != "zabbix" ]; then
+    AuthToken=`curl -s -X POST -H 'Content-Type:application/json' -d'{"jsonrpc": "2.0","method":"user.login","params":{"user":"Admin","password":"zabbix"},"auth": null,"id":0}' $ServerUrl | jq -r '.result'`
+    if [ $AuthToken != "null" ]; then
+        curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "user.update", "params": { "userid": "1", "passwd": "'"$pass"'" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl > /dev/null
+    fi
+fi
+}
+
+login() {
+AuthToken=`curl -s -X POST -H 'Content-Type:application/json' -d'{"jsonrpc": "2.0","method":"user.login","params":{"user":"Admin","password":"'"$pass"'"},"auth": null,"id":0}' $ServerUrl | jq -r '.result'`
+}
+
+registerNodeWithJmx() {
+AgentDNS=$1
+IsNodeRegistered=`curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "host.get", "params": { "filter": { "host": "'"$AgentDNS"'" } }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl | jq -r '.result[] .name'`
+if [[ $IsNodeRegistered != "$AgentDNS" ]]; then
+    curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "host.create", "params": { "host": "'"$AgentDNS"'", "interfaces": [ { "type": 1, "main": 1, "useip": 0, "ip": "127.0.0.1", "dns": "'"$AgentDNS"'", "port": "10050" }, { "type": 4, "main": 1, "useip": 0, "ip": "127.0.0.1", "dns": "'"$AgentDNS"'", "port": "32001" } ], "groups": [ { "groupid": "2" } ], "templates": [ { "templateid": "10001" }, { "templateid": "10082" }, { "templateid": "10083" } ] }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl > /dev/null
+    echo "$AgentDNS has been registered with base and JMX monitoring set up."
+fi
+}
+
+registerNodeWithBaseMonitoringSetUp() {
+AgentDNS=$1
+IsNodeRegistered=`curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "host.get", "params": { "filter": { "host": "'"$AgentDNS"'" } }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl | jq -r '.result[] .name'`
+if [[ $IsNodeRegistered != "$AgentDNS" ]]; then
+    curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "host.create", "params": { "host": "'"$AgentDNS"'", "interfaces": [ { "type": 1, "main": 1, "useip": 0, "ip": "127.0.0.1", "dns": "'"$AgentDNS"'", "port": "10050" } ], "groups": [ { "groupid": "2" } ], "templates": [ { "templateid": "10001" } ] }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl > /dev/null
+    echo "$AgentDNS has been registered with base monitoring set up."
+fi
+}
+
+importConfigs() {
+isJmxConfigured=`curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "item.get", "params": { "output": "extend", "templateids": "10083", "sortfield": "name" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl | jq -r '.result[0].password'`
+if [ "$isJmxConfigured" != "$JMXPass" ]; then
+    importData=`cat /etc/zabbix/importData`
+    curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "configuration.import", "params": { "format": "xml", "rules": { "groups": { "createMissing": true }, "templates": { "createMissing": true, "updateExisting": true }, "templateScreens": { "createMissing": true, "updateExisting": true }, "templateLinkage": { "createMissing": true }, "items": { "createMissing": true, "updateExisting": true }, "discoveryRules": { "createMissing": true, "updateExisting": true }, "triggers": { "createMissing": true, "updateExisting": true }, "graphs": { "createMissing": true, "updateExisting": true } }, "source": "'"$importData"'" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl > /dev/null
+    echo "Imported configurations"
+fi
+}
+
+configureEmailMedia() {
+isMediaConfiguredSmtpServer=`curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "mediatype.get", "params": { "output": "extend", "mediatypeids": "1" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl | jq -r '.result[] .smtp_server'`
+if [ "$isMediaConfiguredSmtpServer" != "127.0.0.1" ]; then
+    curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "mediatype.update", "params": { "mediatypeid": "1", "smtp_server": "127.0.0.1", "smtp_helo": "127.0.0.1" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl > /dev/null
+    echo "Configured email media smtp server"
+fi
+isMediaConfiguredSmtpEmail=`curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "mediatype.get", "params": { "output": "extend", "mediatypeids": "1" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl | jq -r '.result[] .smtp_email'`
+if [ "$isMediaConfiguredSmtpEmail" != "zabbix@$HostUrl" ]; then
+    curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "mediatype.update", "params": { "mediatypeid": "1", "smtp_email": "zabbix@'$HostUrl'" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl > /dev/null
+    echo "Configured email media smtp email"
+fi
+}
+
+configureReportAction() {
+isReportActionConfigured=`curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "action.get", "params": { "output": "extend", "actionids": "3" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl | jq -r '.result[] .status'`
+if [ "$isReportActionConfigured" == "1" ]; then
+    curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "action.update", "params": { "actionid": "3", "status": "0" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl > /dev/null
+    echo "Enabled report action"
+fi
+}
+
+configureAdminMedia() {
+isAdminMediaConfigured=`curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "user.get", "params": { "output": "extend", "mediatypeids": "1" }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl | jq -r '.result[] .alias'`
+if [ "$isAdminMediaConfigured" != "Admin" ]; then
+    curl -s -X POST -H 'Content-Type:application/json' -d'{ "jsonrpc": "2.0", "method": "user.addmedia", "params": { "users": [ { "userid": "1" } ], "medias": { "mediatypeid": "1", "sendto": "'"$AdminEmail"'", "active": 0, "severity": 63, "period": "1-7,00:00-24:00" } }, "auth": "'"$AuthToken"'", "id": 1 }' $ServerUrl > /dev/null
+    echo "Configured Admin user media"
+fi
+}
+
+# base configuration
+changeDefaultCredentials
+login
+importConfigs
+configureEmailMedia
+configureReportAction
+configureAdminMedia
+
+# register hosts
+<% if @aio == "true" -%>
+registerNodeWithJmx $AIOInstanceDNS
+<% else %>
+registerNodeWithJmx $AnalyticsInstanceDNS
+registerNodeWithBaseMonitoringSetUp $DataInstanceDNS
+registerNodeWithJmx $APIInstanceDNS
+registerNodeWithJmx $SiteInstanceDNS
+registerNodeWithBaseMonitoringSetUp $MachineInstanceDNS
+<% end -%>

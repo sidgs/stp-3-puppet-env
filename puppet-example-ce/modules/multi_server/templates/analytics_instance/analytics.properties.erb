@@ -1,0 +1,86 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+analytics.home_dir=${CATALINA_HOME}
+analytics.conf_dir=${HOME}/analytics_conf
+analytics.data_dir=${HOME}/analytics_data
+analytics.tmp_dir=${CATALINA_TMPDIR}
+
+# Pig server configuration
+analytics.pig.scripts_dir=${CATALINA_HOME}/pig/scripts
+analytics.pig.logs_dir=<%= scope.lookupvar('multi_server::analytics_instance::install::log_path') %>
+
+# data storage properties
+analytics.mongodb.embedded=false
+analytics.mongodb.url=mongodb://<%= scope.lookupvar('multi_server::analytics_instance::install::mongo_analytics_user_name') %>:<%= scope.lookupvar('multi_server::analytics_instance::install::mongo_analytics_user_pass') %>@localhost:27017/<%= scope.lookupvar('multi_server::analytics_instance::install::mongo_analytics_db_name') %>
+
+# JDBC data manager properties
+analytics.jdbc.url=jdbc:hsqldb:file:${HOME}/analytics_data/database/analytics
+analytics.jdbc.driver=org.hsqldb.jdbcDriver
+analytics.jdbc.user=sa
+analytics.jdbc.password=
+
+# Metrics initial values
+analytics.initial_values.date=<%= scope.lookupvar('multi_server::analytics_instance::install::initial_value_date') %>
+analytics.initial_values.metrics=<%= scope.lookupvar('multi_server::analytics_instance::install::initial_value_metrics') %>
+analytics.initial_values.metric_total_workspaces=<%= scope.lookupvar('multi_server::analytics_instance::install::initial_value_metric_total_workspaces') %>
+analytics.initial_values.metric_total_users=<%= scope.lookupvar('multi_server::analytics_instance::install::initial_value_metric_total_users') %>
+analytics.initial_values.metric_total_projects=<%= scope.lookupvar('multi_server::analytics_instance::install::initial_value_metric_total_projects') %>
+analytics.initial_values.metric_total_factories=<%= scope.lookupvar('multi_server::analytics_instance::install::initial_value_metric_total_factories') %>
+
+analytics.scheduler.cron_timetable=0 0 1 ? * *
+#analytics.scheduler.force_run_class=com.codenvy.analytics.services.PigRunnerFeature
+#analytics.scheduler.force_run_class=com.codenvy.analytics.services.DataComputationFeature,com.codenvy.analytics.services.ViewBuilderFeature
+#analytics.scheduler.force_run_class=com.codenvy.analytics.services.LogCheckerFeature
+#analytics.scheduler.force_run_class=com.codenvy.analytics.services.DataComputationFeature
+#analytics.scheduler.force_run_class=com.codenvy.analytics.services.ActOnFeature
+#analytics.scheduler.force_run_class=com.codenvy.analytics.services.ReportSenderFeature
+#analytics.scheduler.force_run_period=lastday
+analytics.scheduler.force_run_asynchronous=true
+
+# MetricHandler properties
+analytics.api.metric_handler=com.codenvy.analytics.impl.FileBasedMetricHandler
+
+# Common mail configuration
+analytics.mail.auth=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_mail_auth') %>
+analytics.mail.from=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_mail_from') %>
+analytics.mail.host=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_mail_host') %>
+analytics.mail.port=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_mail_port') %>
+
+# LogChecker configuration
+analytics.log-checker.available=<%= scope.lookupvar('multi_server::analytics_instance::install::log_checker_available') %>
+analytics.log-checker.mail_text=Hi.\n\nBest regards, Analytics Team.
+analytics.log-checker.mail_subject=Log checking for [date]
+analytics.log-checker.mail_to=<%= scope.lookupvar('multi_server::analytics_instance::install::log_checker_mail_to') %>
+
+# ActOn configuration
+analytics.acton.available=false
+
+# Marketo configuration
+analytics.marketo.initializer_available=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_initializer_available') %>
+analytics.marketo.updater_available=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_updater_available') %>
+analytics.marketo.page_size=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_page_size') %>
+analytics.marketo.service_url=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_service_url') %>
+analytics.marketo.service_name=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_service_name') %>
+analytics.marketo.soap_end_point=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_soap_end_point') %>
+analytics.marketo.user_id=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_user_id') %>
+analytics.marketo.secret_key=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_secret_key') %>
+analytics.marketo.program_name=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_program_name') %>
+analytics.marketo.list_name=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_marketo_list_name') %>
+
+# Reports configuration
+analytics.reports.available=<%= scope.lookupvar('multi_server::analytics_instance::install::reports_available') %>
+analytics.reports=<%= scope.lookupvar('multi_server::analytics_instance::install::reports_configuration') %>
+analytics.reports.recipients=<%= scope.lookupvar('multi_server::analytics_instance::install::reports_recipients_configuration') %>
+analytics.reports.mail_text=Hi.\n\nBest regards, Analytics Team.
+analytics.reports.mail_subject=[period] Analytics reports
+analytics.reports.dir=${CATALINA_HOME}/webapps/analytics/reports
+analytics.reports.backup_dir=${HOME}/analytics_data/reports
+
+# Data Computation configuration
+analytics.data-computation.metrics=users_statistics_list_precomputed,workspaces_statistics_list_precomputed,factory_statistics_list_precomputed,projects_statistics_list_precomputed
+
+analytics.admin_login_regexp=<%= scope.lookupvar('multi_server::analytics_instance::install::analytics_admin_login_regexp') %>
+api.endpoint=<%= scope.lookupvar('multi_server::analytics_instance::install::api_endpoint') %>

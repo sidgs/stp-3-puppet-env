@@ -1,0 +1,13 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+[ssh-iptables]
+enabled  = true
+filter   = sshd
+action   = iptables[name=SSH, port=ssh, protocol=tcp]
+#logpath  = /var/log/secure
+backend = systemd
+maxretry = 5
+bantime = 86400

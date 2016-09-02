@@ -1,0 +1,28 @@
+#!/bin/sh
+
+SSH_KEY=~/.ssh/key.pem
+SSH_USER=codenvy
+
+SRC_FOLDER=${1}
+SRC_HOST=${2}
+DST_FOLDER=${3}
+REMOVE_ON_SUCCESS=${4=false}
+
+# ensure existing trailing slash to overrite permissions of destination folder too
+if [[ ${SRC_FOLDER} != */ ]]; then
+   SRC_FOLDER=${SRC_FOLDER}"/"
+fi
+if [[ ${DST_FOLDER} != */ ]]; then
+   DST_FOLDER=${DST_FOLDER}"/"
+fi
+
+rsync --quiet --delete --partial --links --safe-links --recursive --times --human-readable --bwlimit=7000 --executability \
+              --include='.codenvy/' \
+              --filter=':- .gitignore' \
+              --rsh="ssh -i ${SSH_KEY} -l ${SSH_USER} -o StrictHostKeyChecking=no" \
+              --rsync-path="sudo rsync" \
+              ${SRC_HOST}:${SRC_FOLDER} ${DST_FOLDER}
+
+if [[ ${REMOVE_ON_SUCCESS} == true ]]; then
+   ssh -i ${SSH_KEY} ${SSH_USER}@${SRC_HOST} "sudo rm -rf ${SRC_FOLDER}"
+fi

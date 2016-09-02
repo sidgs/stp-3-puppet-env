@@ -1,0 +1,31 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+organization.storage.db.url=<%= scope.lookupvar('multi_server::api_instance::install::mongo_url') %>:<%= scope.lookupvar('multi_server::api_instance::install::mongo_port') %>
+organization.storage.db.name=<%= scope.lookupvar('multi_server::api_instance::install::mongo_orgservice_db_name') %>
+organization.storage.db.username=<%= scope.lookupvar('multi_server::api_instance::install::mongo_orgservice_user_name') %>
+organization.storage.db.password=<%= scope.lookupvar('multi_server::api_instance::install::mongo_orgservice_user_pwd') %>
+
+organization.storage.db.profile.collection=profiles
+organization.storage.db.workspace.collection=workspaces
+organization.storage.db.account.collection=accounts
+organization.storage.db.workspace2.collection=workspaces2
+organization.storage.db.permission.collection=permissions
+organization.storage.db.worker.collection=workers
+organization.storage.db.ssh.collection=ssh
+
+organization.storage.db.ws.member.collection=wsmembers
+organization.storage.db.subscription.collection=subscriptions
+organization.storage.db.acc.member.collection=accmembers
+
+organization.storage.db.plan.collection=plans
+organization.storage.db.subscription.attributes.collection=subscriptionAttributes
+organization.storage.db.preferences.collection=preferences
+
+organization.storage.db.recipes.collection=recipes
+organization.storage.db.stacks.collection=stacks
+organization.storage.db.commands.collection=commands
+
+organization.storage.db.snapshot.collection=snapshots
